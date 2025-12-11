@@ -1,0 +1,50 @@
+name: Build and Push Image (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        type: string
+        required: false
+        default: "."
+      image-name:
+        type: string
+        required: true
+    secrets:
+      REGISTRY_USERNAME:
+        required: true
+      REGISTRY_PASSWORD:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-arch if needed)
+        uses: docker/setup-qemu-action@v2
+
+      - name: Login to registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ inputs.working-directory }}
+          push: true
+          tags: ${{ inputs.image-name }}
+          # optionally build multiple platforms:
+          # platforms: linux/amd64,linux/arm64
+
+      - name: Image info
+        run: |
+          echo "Image pushed: ${{ inputs.image-name }}"
+

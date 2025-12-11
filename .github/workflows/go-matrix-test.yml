@@ -1,0 +1,36 @@
+name: Go Test Matrix
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        type: string
+        required: false
+        default: "."
+    secrets: {}
+
+jobs:
+  test:
+    name: Go Tests (${{ matrix.go }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        go: [1.22, 1.23, 1.24, 1.25]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Run tests
+        run: |
+          cd ${{ inputs.working-directory }}
+          go test ./...
+

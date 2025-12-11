@@ -1,0 +1,47 @@
+name: Deploy to Kubernetes (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+      namespace:
+        required: true
+        type: string
+      deployment:
+        required: true
+        type: string
+    secrets:
+      KUBECONFIG_CONTENT:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Write kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Show current cluster context
+        run: kubectl config current-context
+
+      - name: Set image and rollout
+        run: |
+          kubectl -n ${{ inputs.namespace }} set image deployment/${{ inputs.deployment }} ${{
+            inputs.deployment
+          }}=${{ inputs.image }} --record
+          kubectl -n ${{ inputs.namespace }} rollout status deployment/${{ inputs.deployment }} --timeout=120s
+
