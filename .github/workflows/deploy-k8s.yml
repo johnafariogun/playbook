@@ -34,6 +34,7 @@ jobs:
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
+          ls -lah $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
       - name: Show current cluster context
