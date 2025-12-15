@@ -15,8 +15,8 @@ on:
     secrets:
       KUBECONFIG_CONTENT:
         required: true
-      GITHUB_TOKEN:
-        required: true
+      # GITHUB_TOKEN:
+      #   required: true
 
 jobs:
   deploy:
