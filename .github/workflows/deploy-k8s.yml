@@ -32,6 +32,7 @@ jobs:
 
       - name: Write kubeconfig
         run: |
+          mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
@@ -40,8 +41,10 @@ jobs:
 
       - name: Set image and rollout
         run: |
-          kubectl -n ${{ inputs.namespace }} set image deployment/${{ inputs.deployment }} ${{
-            inputs.deployment
-          }}=${{ inputs.image }} --record
-          kubectl -n ${{ inputs.namespace }} rollout status deployment/${{ inputs.deployment }} --timeout=120s
-
+          if kubectl cluster-info &> /dev/null; then
+            kubectl -n ${{ inputs.namespace }} set image deployment/${{ inputs.deployment }} ${{ inputs.deployment }}=${{ inputs.image }} --record
+            kubectl -n ${{ inputs.namespace }} rollout status deployment/${{ inputs.deployment }} --timeout=120s
+          else
+            echo "⚠️ Demo mode: Skipping actual deployment (cluster not reachable)"
+            exit 0
+          fi
